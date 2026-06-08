@@ -16,6 +16,7 @@ def profile_kb():
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="📊 تاریخچه سکه‌ها", callback_data="history")],
         [InlineKeyboardButton(text="🎟️ کد هدیه", callback_data="gift_code")],
+        [InlineKeyboardButton(text="💰 خرید سکه", callback_data="buy_coins")],
     ])
 
 
