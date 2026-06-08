@@ -78,9 +78,15 @@ async def order_quantity(message: Message, state: FSMContext):
     success = await deduct_coins(message.from_user.id, total_cost, "order", f"سفارش {quantity} ممبر برای {channel}")
     if success:
         async with aiosqlite.connect(DB_PATH) as db:
+            # ثبت سفارش
             await db.execute(
                 "INSERT INTO orders (user_id, channel_id, channel_name, quantity, coins_spent) VALUES (?, ?, ?, ?, ?)",
                 (message.from_user.id, channel, channel, quantity, total_cost)
+            )
+            # اضافه کردن خودکار کانال به لیست
+            await db.execute(
+                "INSERT OR IGNORE INTO channels (channel_id, channel_name, is_active) VALUES (?, ?, 1)",
+                (channel, channel)
             )
             await db.commit()
 
@@ -88,7 +94,8 @@ async def order_quantity(message: Message, state: FSMContext):
             f"✅ سفارش ثبت شد!\n\n"
             f"📢 کانال: {channel}\n"
             f"👥 تعداد: {quantity} ممبر\n"
-            f"🪙 هزینه: {total_cost} سکه کسر شد",
+            f"🪙 هزینه: {total_cost} سکه کسر شد\n\n"
+            f"کانال شما به لیست عضویت اضافه شد ✅",
             reply_markup=main_menu_kb()
         )
     await state.clear()
