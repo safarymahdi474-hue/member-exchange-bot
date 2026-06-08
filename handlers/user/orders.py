@@ -24,8 +24,10 @@ async def order_start(message: Message, state: FSMContext):
         f"📦 سفارش ممبر\n\n"
         f"🪙 موجودی شما: {user['coins']} سکه\n"
         f"💰 هزینه هر ممبر: {coins_per_member} سکه\n\n"
-        f"آیدی یا لینک کانال مورد نظر رو ارسال کن:\n"
-        f"مثال: @mychannel",
+        f"آیدی کانال مورد نظر رو ارسال کن:\n"
+f"مثال: @mychannel\n\n"
+f"⚠️ توجه: ربات باید ادمین کانال شما باشه\n"
+f"فقط دسترسی «دیدن اعضا» کافیه",
         reply_markup=back_kb()
     )
     await state.set_state(OrderStates.waiting_channel)
