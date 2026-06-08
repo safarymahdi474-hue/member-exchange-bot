@@ -5,7 +5,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from config import BOT_TOKEN
 from database.db import init_db
 
-from handlers.user import start, profile, tasks, orders, transfer, gift_code
+from handlers.user import start, profile, tasks, orders, transfer, gift_code, donate
 from handlers.admin import panel, gift_codes, broadcast
 
 logging.basicConfig(level=logging.INFO)
@@ -24,6 +24,7 @@ async def main():
     dp.include_router(orders.router)
     dp.include_router(transfer.router)
     dp.include_router(gift_code.router)
+    dp.include_router(donate.router)
     dp.include_router(panel.router)
     dp.include_router(gift_codes.router)
     dp.include_router(broadcast.router)
