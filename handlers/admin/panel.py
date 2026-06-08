@@ -272,6 +272,25 @@ async def setting_change_confirm(message: Message, state: FSMContext):
 
 
 # ── بازگشت به پنل ادمین ────────────────────────────────────
+@router.message(F.text.startswith("/addscore"))
+async def addscore_handler(message: Message):
+    if not is_admin(message.from_user.id):
+        return
+    try:
+        parts = message.text.split()
+        target_id = int(parts[1])
+        amount = int(parts[2])
+        await add_coins(target_id, amount, "admin", "خرید سکه - تأیید ادمین")
+        await message.answer(f"✅ {amount} سکه به کاربر {target_id} اضافه شد.")
+        try:
+            await message.bot.send_message(
+                target_id,
+                f"✅ پرداخت شما تأیید شد!\n🪙 {amount} سکه به حسابت اضافه شد."
+            )
+        except Exception:
+            pass
+    except Exception:
+        await message.answer("❌ فرمت اشتباه!\nمثال: /addscore 123456 50")
 @router.callback_query(F.data == "back_admin")
 async def back_admin(callback: CallbackQuery):
     from handlers.user.profile import show_profile
