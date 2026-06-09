@@ -34,7 +34,6 @@ async def show_next_channel(message, user_id: int, bot: Bot, edit: bool = False)
     joined = await get_user_joined_channels(user_id)
     coins_per_join = await get_setting("coins_per_join")
 
-    # پیدا کردن اولین کانالی که هنوز عضو نشده
     next_channel = None
     remaining = 0
     for ch in channels:
@@ -106,7 +105,29 @@ async def verify_single(callback: CallbackQuery, bot: Bot):
                     "INSERT OR IGNORE INTO user_channel_joins (user_id, channel_id) VALUES (?, ?)",
                     (user_id, channel_id)
                 )
+                # چک تعداد ممبرهای جذب شده
+                async with db.execute(
+                    "SELECT quantity FROM orders WHERE channel_id = ? AND status = 'active'",
+                    (channel_id,)
+                ) as c:
+                    order = await c.fetchone()
+                async with db.execute(
+                    "SELECT COUNT(*) FROM user_channel_joins WHERE channel_id = ?",
+                    (channel_id,)
+                ) as c:
+                    joined_count = (await c.fetchone())[0]
+                # اگه به تعداد سفارش رسید کانال رو غیرفعال کن
+                if order and joined_count >= order[0]:
+                    await db.execute(
+                        "UPDATE channels SET is_active = 0 WHERE channel_id = ?",
+                        (channel_id,)
+                    )
+                    await db.execute(
+                        "UPDATE orders SET status = 'completed' WHERE channel_id = ? AND status = 'active'",
+                        (channel_id,)
+                    )
                 await db.commit()
+
             await add_coins(user_id, coins_per_join, "join", f"عضویت در {channel_id}")
             await callback.answer(f"✅ +{coins_per_join} سکه دریافت کردی!", show_alert=True)
             await show_next_channel(callback.message, user_id, bot, edit=True)
