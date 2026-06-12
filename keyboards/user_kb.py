@@ -17,6 +17,7 @@ def profile_kb():
         [InlineKeyboardButton(text="📊 تاریخچه سکه‌ها", callback_data="history")],
         [InlineKeyboardButton(text="🎟️ کد هدیه", callback_data="gift_code")],
         [InlineKeyboardButton(text="💰 خرید سکه", callback_data="buy_coins")],
+        [InlineKeyboardButton(text="📢 درخواست تبلیغ", callback_data="advertise")],
     ])
 
 
