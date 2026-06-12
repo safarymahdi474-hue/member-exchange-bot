@@ -120,3 +120,10 @@ async def set_setting(key: str, value: int):
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (key, str(value)))
         await db.commit()
+
+CREATE TABLE IF NOT EXISTS skipped_channels (
+    user_id INTEGER,
+    channel_id TEXT,
+    skipped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, channel_id)
+);
