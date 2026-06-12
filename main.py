@@ -3,7 +3,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from config import BOT_TOKEN
-from database.db import init_db
+from database.db import init_db, migrate_db
 
 from handlers.user import start, profile, tasks, orders, transfer, gift_code, donate, advertise
 from handlers.admin import panel, gift_codes, broadcast, admins, force_join
