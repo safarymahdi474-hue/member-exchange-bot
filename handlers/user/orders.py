@@ -25,9 +25,9 @@ async def order_start(message: Message, state: FSMContext):
         f"🪙 موجودی شما: {user['coins']} سکه\n"
         f"💰 هزینه هر ممبر: {coins_per_member} سکه\n\n"
         f"آیدی کانال مورد نظر رو ارسال کن:\n"
-f"مثال: @mychannel\n\n"
-f"⚠️ توجه: ربات باید ادمین کانال شما باشه\n"
-f"فقط دسترسی «دیدن اعضا» کافیه",
+        f"مثال: @mychannel\n\n"
+        f"⚠️ توجه: ربات باید ادمین کانال شما باشه\n"
+        f"فقط دسترسی «دیدن اعضا» کافیه",
         reply_markup=back_kb()
     )
     await state.set_state(OrderStates.waiting_channel)
@@ -57,13 +57,14 @@ async def order_quantity(message: Message, state: FSMContext):
     try:
         quantity = int(message.text.strip())
         if quantity <= 0:
-            min_order = await get_setting("min_order")
-if quantity < min_order:
-    await message.answer(f"⚠️ حداقل تعداد سفارش {min_order} ممبر است.")
-    return
             raise ValueError
     except ValueError:
         await message.answer("⚠️ عدد صحیح وارد کن.")
+        return
+
+    min_order = await get_setting("min_order")
+    if min_order and quantity < min_order:
+        await message.answer(f"⚠️ حداقل تعداد سفارش {min_order} ممبر است.")
         return
 
     data = await state.get_data()
@@ -81,31 +82,30 @@ if quantity < min_order:
         await state.clear()
         return
 
-    success = await deduct_coins(message.from_user.id, total_cost, "order", f"سفارش {quantity} ممبر برای {channel}")
+    success = await deduct_coins(
+        message.from_user.id, total_cost, "order",
+        f"سفارش {quantity} ممبر برای {channel}"
+    )
     if success:
         async with aiosqlite.connect(DB_PATH) as db:
-            # ثبت سفارش
             await db.execute(
                 "INSERT INTO orders (user_id, channel_id, channel_name, quantity, coins_spent) VALUES (?, ?, ?, ?, ?)",
                 (message.from_user.id, channel, channel, quantity, total_cost)
             )
-            # اضافه کردن خودکار کانال به لیست
-          # اضافه کردن خودکار کانال به لیست (فقط اگه وجود نداشت)
-async with db.execute(
-    "SELECT id FROM channels WHERE channel_id = ?", (channel,)
-) as c:
-    exists = await c.fetchone()
-if exists:
-    # اگه قبلاً بوده و غیرفعال شده، دوباره فعالش کن
-    await db.execute(
-        "UPDATE channels SET is_active = 1, quantity = ? WHERE channel_id = ?",
-        (quantity, channel)
-    )
-else:
-    await db.execute(
-        "INSERT INTO channels (channel_id, channel_name, is_active) VALUES (?, ?, 1)",
-        (channel, channel)
-    )
+            async with db.execute(
+                "SELECT id FROM channels WHERE channel_id = ?", (channel,)
+            ) as c:
+                exists = await c.fetchone()
+            if exists:
+                await db.execute(
+                    "UPDATE channels SET is_active = 1 WHERE channel_id = ?",
+                    (channel,)
+                )
+            else:
+                await db.execute(
+                    "INSERT INTO channels (channel_id, channel_name, is_active) VALUES (?, ?, 1)",
+                    (channel, channel)
+                )
             await db.commit()
 
         await message.answer(
