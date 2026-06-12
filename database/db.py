@@ -77,6 +77,11 @@ async def init_db():
                 used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (user_id, code_id)
             );
+            CREATE TABLE IF NOT EXISTS admins (
+    user_id INTEGER PRIMARY KEY,
+    full_name TEXT,
+    permissions TEXT DEFAULT 'full'
+);
 
             INSERT OR IGNORE INTO settings (key, value) VALUES ('coins_start', '50');
             INSERT OR IGNORE INTO settings (key, value) VALUES ('coins_per_join', '1');
