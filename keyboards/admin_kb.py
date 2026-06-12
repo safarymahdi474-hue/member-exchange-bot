@@ -44,14 +44,19 @@ def admin_channels_kb(channels: list):
 def admin_gift_codes_kb(codes: list):
     buttons = []
     for code in codes:
-        buttons.append([InlineKeyboardButton(
-            text=f"{'✅' if code['is_active'] else '❌'} {code['code']} | {code['coins']}🪙 | {code['used_count']}/{code['max_uses']}",
-            callback_data=f"toggle_code_{code['id']}"
-        )])
+        buttons.append([
+            InlineKeyboardButton(
+                text=f"{'✅' if code['is_active'] else '❌'} {code['code']} | {code['coins']}🪙 | {code['used_count']}/{code['max_uses']}",
+                callback_data=f"toggle_code_{code['id']}"
+            ),
+            InlineKeyboardButton(
+                text="🗑️",
+                callback_data=f"delete_code_{code['id']}"
+            )
+        ])
     buttons.append([InlineKeyboardButton(text="➕ ساخت کد جدید", callback_data="create_gift_code")])
     buttons.append([InlineKeyboardButton(text="🔙 بازگشت", callback_data="back_admin")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
-
 
 def admin_settings_kb():
     return InlineKeyboardMarkup(inline_keyboard=[
