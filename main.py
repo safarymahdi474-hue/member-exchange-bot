@@ -9,6 +9,8 @@ from handlers.user import start, profile, tasks, orders, transfer, gift_code, do
 from handlers.admin import panel, gift_codes, broadcast
 from handlers.admin import admins
 dp.include_router(admins.router)
+from handlers.user import advertise
+dp.include_router(advertise.router)
 
 logging.basicConfig(level=logging.INFO)
 
