@@ -13,6 +13,7 @@ def admin_profile_kb():
         [InlineKeyboardButton(text="📣 پیام همگانی", callback_data="admin_broadcast")],
         [InlineKeyboardButton(text="📦 حداقل سفارش ممبر", callback_data="set_min_order")],
         [InlineKeyboardButton(text="👮 مدیریت ادمین‌ها", callback_data="admin_manage_admins")],
+        [InlineKeyboardButton(text="🔒 کانال عضویت اجباری", callback_data="admin_force_join")],
     ])
 
 
