@@ -82,6 +82,7 @@ async def init_db():
             INSERT OR IGNORE INTO settings (key, value) VALUES ('coins_per_join', '1');
             INSERT OR IGNORE INTO settings (key, value) VALUES ('coins_per_member', '2');
             INSERT OR IGNORE INTO settings (key, value) VALUES ('coins_per_referral', '25');
+            INSERT OR IGNORE INTO settings (key, value) VALUES ('min_order', '1');
         """)
         await db.commit()
 
