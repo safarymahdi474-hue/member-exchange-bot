@@ -11,6 +11,8 @@ from handlers.admin import admins
 dp.include_router(admins.router)
 from handlers.user import advertise
 dp.include_router(advertise.router)
+from handlers.admin import force_join
+dp.include_router(force_join.router)
 
 logging.basicConfig(level=logging.INFO)
 
