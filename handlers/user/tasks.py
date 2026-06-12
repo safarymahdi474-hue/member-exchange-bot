@@ -139,3 +139,19 @@ async def verify_single(callback: CallbackQuery, bot: Bot):
             await callback.answer("❌ هنوز عضو نشدی! اول عضو بشو بعد تأیید کن.", show_alert=True)
     except Exception:
         await callback.answer("❌ خطا در بررسی عضویت. مطمئن شو ربات ادمین کانال باشه.", show_alert=True)
+
+@router.callback_query(F.data.startswith("skip_channel_"))
+async def skip_channel(callback: CallbackQuery, bot: Bot):
+    user_id = callback.from_user.id
+    channel_id = callback.data.replace("skip_channel_", "")
+
+    # ذخیره کانال رد شده تو session
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "INSERT OR IGNORE INTO skipped_channels (user_id, channel_id) VALUES (?, ?)",
+            (user_id, channel_id)
+        )
+        await db.commit()
+
+    await callback.answer("⏭️ کانال رد شد.", show_alert=False)
+    await show_next_channel(callback.message, user_id, bot, edit=True)
