@@ -51,16 +51,20 @@ async def show_next_channel(message, user_id: int, bot: Bot, edit: bool = False)
             await message.answer(text, reply_markup=main_menu_kb())
         return
 
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(
-            text=f"➕ عضو شو در {next_channel['channel_name']}",
-            url=f"https://t.me/{next_channel['channel_id'].lstrip('@')}"
-        )],
-        [InlineKeyboardButton(
-            text="✔️ عضو شدم، بعدی رو نشون بده",
-            callback_data=f"verify_single_{next_channel['channel_id']}"
-        )]
-    ])
+   kb = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(
+        text=f"➕ عضو شو در {next_channel['channel_name']}",
+        url=f"https://t.me/{next_channel['channel_id'].lstrip('@')}"
+    )],
+    [InlineKeyboardButton(
+        text="✔️ عضو شدم، بعدی رو نشون بده",
+        callback_data=f"verify_single_{next_channel['channel_id']}"
+    )],
+    [InlineKeyboardButton(
+        text="⏭️ رد کردن این کانال",
+        callback_data=f"skip_channel_{next_channel['channel_id']}"
+    )]
+])
 
     text = (
         f"📢 کانال {len(joined) + 1} از {len(channels)}\n\n"
