@@ -93,6 +93,12 @@ CREATE TABLE IF NOT EXISTS force_join_channels (
     is_active INTEGER DEFAULT 1,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE IF NOT EXISTS skipped_channels (
+    user_id INTEGER,
+    channel_id TEXT,
+    skipped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, channel_id)
+);
 
             INSERT OR IGNORE INTO settings (key, value) VALUES ('coins_start', '50');
             INSERT OR IGNORE INTO settings (key, value) VALUES ('coins_per_join', '1');
