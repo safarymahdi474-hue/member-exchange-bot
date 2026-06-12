@@ -7,6 +7,8 @@ from database.db import init_db
 
 from handlers.user import start, profile, tasks, orders, transfer, gift_code, donate
 from handlers.admin import panel, gift_codes, broadcast
+from handlers.admin import admins
+dp.include_router(admins.router)
 
 logging.basicConfig(level=logging.INFO)
 
