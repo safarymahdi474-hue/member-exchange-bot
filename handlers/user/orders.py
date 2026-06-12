@@ -57,6 +57,10 @@ async def order_quantity(message: Message, state: FSMContext):
     try:
         quantity = int(message.text.strip())
         if quantity <= 0:
+            min_order = await get_setting("min_order")
+if quantity < min_order:
+    await message.answer(f"⚠️ حداقل تعداد سفارش {min_order} ممبر است.")
+    return
             raise ValueError
     except ValueError:
         await message.answer("⚠️ عدد صحیح وارد کن.")
