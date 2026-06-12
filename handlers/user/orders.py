@@ -86,10 +86,22 @@ async def order_quantity(message: Message, state: FSMContext):
                 (message.from_user.id, channel, channel, quantity, total_cost)
             )
             # اضافه کردن خودکار کانال به لیست
-            await db.execute(
-                "INSERT OR IGNORE INTO channels (channel_id, channel_name, is_active) VALUES (?, ?, 1)",
-                (channel, channel)
-            )
+          # اضافه کردن خودکار کانال به لیست (فقط اگه وجود نداشت)
+async with db.execute(
+    "SELECT id FROM channels WHERE channel_id = ?", (channel,)
+) as c:
+    exists = await c.fetchone()
+if exists:
+    # اگه قبلاً بوده و غیرفعال شده، دوباره فعالش کن
+    await db.execute(
+        "UPDATE channels SET is_active = 1, quantity = ? WHERE channel_id = ?",
+        (quantity, channel)
+    )
+else:
+    await db.execute(
+        "INSERT INTO channels (channel_id, channel_name, is_active) VALUES (?, ?, 1)",
+        (channel, channel)
+    )
             await db.commit()
 
         await message.answer(
