@@ -111,6 +111,38 @@ async def init_db():
         """)
         await db.commit()
 
+async def migrate_db():
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.executescript("""
+            CREATE TABLE IF NOT EXISTS skipped_channels (
+                user_id INTEGER,
+                channel_id TEXT,
+                skipped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, channel_id)
+            );
+
+            CREATE TABLE IF NOT EXISTS force_join_channels (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                channel_id TEXT NOT NULL UNIQUE,
+                channel_name TEXT NOT NULL,
+                remove_type TEXT DEFAULT 'count',
+                remove_value INTEGER DEFAULT 100,
+                current_count INTEGER DEFAULT 0,
+                expires_at TIMESTAMP,
+                is_active INTEGER DEFAULT 1,
+                added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS admins (
+                user_id INTEGER PRIMARY KEY,
+                full_name TEXT,
+                permissions TEXT DEFAULT 'full'
+            );
+
+            INSERT OR IGNORE INTO settings (key, value) VALUES ('min_order', '1');
+        """)
+        await db.commit()
+
 
 async def get_setting(key: str) -> int:
     async with aiosqlite.connect(DB_PATH) as db:
