@@ -1,5 +1,6 @@
 from aiogram import BaseMiddleware
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.exceptions import TelegramBadRequest
 import aiosqlite
 from config import DB_PATH
 from typing import Callable, Dict, Any, Awaitable
@@ -21,7 +22,7 @@ async def get_unjoin_channel(bot, user_id: int):
     for ch in channels:
         try:
             member = await bot.get_chat_member(ch["channel_id"], user_id)
-            if member.status not in ("member", "administrator", "creator"):
+            if member.status in ("left", "kicked", "restricted"):
                 return ch
         except Exception:
             pass
@@ -44,31 +45,34 @@ def make_force_join_kb(channel):
 class ForceJoinMiddleware(BaseMiddleware):
     async def __call__(
         self,
-        handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
-        event: Message,
+        handler: Callable,
+        event,
         data: Dict[str, Any]
     ) -> Any:
         bot = data["bot"]
-        user_id = event.from_user.id
 
-        # callback های مربوط به force join رو رد کن
+        # اگه callback مربوط به force join بود رد کن
         if isinstance(event, CallbackQuery):
             if event.data == "recheck_force_join":
                 return await handler(event, data)
+            user_id = event.from_user.id
+        elif isinstance(event, Message):
+            user_id = event.from_user.id
+        else:
+            return await handler(event, data)
 
         unjoin = await get_unjoin_channel(bot, user_id)
         if unjoin:
             kb = make_force_join_kb(unjoin)
-            if isinstance(event, Message):
-                await event.answer(
-                    f"⚠️ برای استفاده از ربات باید در کانال ما عضو بشی:",
-                    reply_markup=kb
-                )
-            elif isinstance(event, CallbackQuery):
-                await event.message.answer(
-                    f"⚠️ برای استفاده از ربات باید در کانال ما عضو بشی:",
-                    reply_markup=kb
-                )
-                await event.answer()
+            text = "⚠️ برای استفاده از ربات باید در کانال ما عضو بشی:"
+            try:
+                if isinstance(event, Message):
+                    await event.answer(text, reply_markup=kb)
+                elif isinstance(event, CallbackQuery):
+                    await event.message.answer(text, reply_markup=kb)
+                    await event.answer()
+            except TelegramBadRequest:
+                pass
             return
+
         return await handler(event, data)
