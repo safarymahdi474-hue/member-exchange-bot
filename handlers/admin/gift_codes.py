@@ -136,7 +136,9 @@ async def toggle_gift_code(callback: CallbackQuery):
         await db.commit()
     await callback.answer("✅ وضعیت کد تغییر کرد.", show_alert=True)
     await admin_gift_codes(callback)
-    @router.callback_query(F.data.startswith("delete_code_"))
+
+
+@router.callback_query(F.data.startswith("delete_code_"))
 async def delete_gift_code(callback: CallbackQuery):
     if not is_admin(callback.from_user.id):
         return
