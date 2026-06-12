@@ -11,6 +11,7 @@ def admin_profile_kb():
         [InlineKeyboardButton(text="🎟️ مدیریت کدهای هدیه", callback_data="admin_gift_codes")],
         [InlineKeyboardButton(text="⚙️ تنظیمات", callback_data="admin_settings")],
         [InlineKeyboardButton(text="📣 پیام همگانی", callback_data="admin_broadcast")],
+        [InlineKeyboardButton(text="📦 حداقل سفارش ممبر", callback_data="set_min_order")],
     ])
 
 
