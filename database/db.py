@@ -82,6 +82,17 @@ async def init_db():
     full_name TEXT,
     permissions TEXT DEFAULT 'full'
 );
+CREATE TABLE IF NOT EXISTS force_join_channels (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    channel_id TEXT NOT NULL UNIQUE,
+    channel_name TEXT NOT NULL,
+    remove_type TEXT DEFAULT 'count',
+    remove_value INTEGER DEFAULT 100,
+    current_count INTEGER DEFAULT 0,
+    expires_at TIMESTAMP,
+    is_active INTEGER DEFAULT 1,
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
             INSERT OR IGNORE INTO settings (key, value) VALUES ('coins_start', '50');
             INSERT OR IGNORE INTO settings (key, value) VALUES ('coins_per_join', '1');
