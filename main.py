@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO)
 
 async def main():
     await init_db()
+    await migrate_db()
 
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher(storage=MemoryStorage())
