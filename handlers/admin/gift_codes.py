@@ -136,3 +136,14 @@ async def toggle_gift_code(callback: CallbackQuery):
         await db.commit()
     await callback.answer("✅ وضعیت کد تغییر کرد.", show_alert=True)
     await admin_gift_codes(callback)
+    @router.callback_query(F.data.startswith("delete_code_"))
+async def delete_gift_code(callback: CallbackQuery):
+    if not is_admin(callback.from_user.id):
+        return
+    code_id = int(callback.data.split("_")[-1])
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("DELETE FROM gift_codes WHERE id = ?", (code_id,))
+        await db.execute("DELETE FROM gift_code_uses WHERE code_id = ?", (code_id,))
+        await db.commit()
+    await callback.answer("✅ کد هدیه حذف شد.", show_alert=True)
+    await admin_gift_codes(callback)
