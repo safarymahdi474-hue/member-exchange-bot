@@ -77,28 +77,31 @@ async def init_db():
                 used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (user_id, code_id)
             );
+
             CREATE TABLE IF NOT EXISTS admins (
-    user_id INTEGER PRIMARY KEY,
-    full_name TEXT,
-    permissions TEXT DEFAULT 'full'
-);
-CREATE TABLE IF NOT EXISTS force_join_channels (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    channel_id TEXT NOT NULL UNIQUE,
-    channel_name TEXT NOT NULL,
-    remove_type TEXT DEFAULT 'count',
-    remove_value INTEGER DEFAULT 100,
-    current_count INTEGER DEFAULT 0,
-    expires_at TIMESTAMP,
-    is_active INTEGER DEFAULT 1,
-    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-CREATE TABLE IF NOT EXISTS skipped_channels (
-    user_id INTEGER,
-    channel_id TEXT,
-    skipped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (user_id, channel_id)
-);
+                user_id INTEGER PRIMARY KEY,
+                full_name TEXT,
+                permissions TEXT DEFAULT 'full'
+            );
+
+            CREATE TABLE IF NOT EXISTS force_join_channels (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                channel_id TEXT NOT NULL UNIQUE,
+                channel_name TEXT NOT NULL,
+                remove_type TEXT DEFAULT 'count',
+                remove_value INTEGER DEFAULT 100,
+                current_count INTEGER DEFAULT 0,
+                expires_at TIMESTAMP,
+                is_active INTEGER DEFAULT 1,
+                added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS skipped_channels (
+                user_id INTEGER,
+                channel_id TEXT,
+                skipped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, channel_id)
+            );
 
             INSERT OR IGNORE INTO settings (key, value) VALUES ('coins_start', '50');
             INSERT OR IGNORE INTO settings (key, value) VALUES ('coins_per_join', '1');
@@ -120,34 +123,3 @@ async def set_setting(key: str, value: int):
     async with aiosqlite.connect(DB_PATH) as db:
         await db.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (key, str(value)))
         await db.commit()
-
-CREATE TABLE IF NOT EXISTS skipped_channels (
-    user_id INTEGER,
-    channel_id TEXT,
-    skipped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (user_id, channel_id)
-);
-CREATE TABLE IF NOT EXISTS skipped_channels (
-    user_id INTEGER,
-    channel_id TEXT,
-    skipped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (user_id, channel_id)
-);
-
-CREATE TABLE IF NOT EXISTS force_join_channels (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    channel_id TEXT NOT NULL UNIQUE,
-    channel_name TEXT NOT NULL,
-    remove_type TEXT DEFAULT 'count',
-    remove_value INTEGER DEFAULT 100,
-    current_count INTEGER DEFAULT 0,
-    expires_at TIMESTAMP,
-    is_active INTEGER DEFAULT 1,
-    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS admins (
-    user_id INTEGER PRIMARY KEY,
-    full_name TEXT,
-    permissions TEXT DEFAULT 'full'
-);
