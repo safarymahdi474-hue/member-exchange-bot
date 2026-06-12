@@ -4,9 +4,9 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from config import BOT_TOKEN
 from database.db import init_db, migrate_db
-
-from handlers.user import start, profile, tasks, orders, transfer, gift_code, donate, advertise
+from handlers.user import start, profile, tasks, orders, transfer, gift_code, donate, advertise, recheck
 from handlers.admin import panel, gift_codes, broadcast, admins, force_join
+from middlewares.force_join import ForceJoinMiddleware
 
 logging.basicConfig(level=logging.INFO)
 
@@ -18,6 +18,10 @@ async def main():
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher(storage=MemoryStorage())
 
+    dp.message.middleware(ForceJoinMiddleware())
+    dp.callback_query.middleware(ForceJoinMiddleware())
+
+    dp.include_router(recheck.router)
     dp.include_router(start.router)
     dp.include_router(profile.router)
     dp.include_router(tasks.router)
