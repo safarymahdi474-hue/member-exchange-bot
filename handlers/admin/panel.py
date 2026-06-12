@@ -236,6 +236,7 @@ SETTINGS_MAP = {
     "set_coins_per_join": ("coins_per_join", "✅ سکه هر عضویت"),
     "set_coins_per_member": ("coins_per_member", "📦 هزینه هر ممبر"),
     "set_coins_per_referral": ("coins_per_referral", "👥 سکه رفرال"),
+    "set_min_order": ("min_order", "📦 حداقل سفارش ممبر"),
 }
 
 
