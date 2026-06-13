@@ -114,10 +114,11 @@ async def add_force_confirm(message: Message, state: FSMContext):
         expires_at = datetime.now() + timedelta(hours=value)
 
     async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute(
-            "INSERT OR IGNORE INTO force_join_channels (channel_id, channel_name, remove_type, remove_value, expires_at) VALUES (?, ?, ?, ?, ?)",
-            (data["channel_id"], data["channel_name"], data["remove_type"], value, expires_at)
-        )
+       await db.execute(
+    "INSERT INTO force_join_channels (channel_id, channel_name, remove_type, remove_value, expires_at, is_active, current_count) VALUES (?, ?, ?, ?, ?, 1, 0) "
+    "ON CONFLICT(channel_id) DO UPDATE SET channel_name=excluded.channel_name, remove_type=excluded.remove_type, remove_value=excluded.remove_value, expires_at=excluded.expires_at, is_active=1, current_count=0",
+    (data["channel_id"], data["channel_name"], data["remove_type"], value, expires_at)
+)
         await db.commit()
 
     await message.answer(
