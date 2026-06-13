@@ -2,7 +2,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.exceptions import TelegramBadRequest
 import aiosqlite
-from config import DB_PATH
+from config import DB_PATH, ADMIN_IDS
 from typing import Callable, Dict, Any, Awaitable
 
 
@@ -51,13 +51,18 @@ class ForceJoinMiddleware(BaseMiddleware):
     ) -> Any:
         bot = data["bot"]
 
-        # اگه callback مربوط به force join بود رد کن
         if isinstance(event, CallbackQuery):
-            if event.data == "recheck_force_join":
-                return await handler(event, data)
             user_id = event.from_user.id
+            # ادمین و callback های مخصوص رو رد کن
+            if user_id in ADMIN_IDS:
+                return await handler(event, data)
+            if event.data and event.data.startswith(("recheck_force_join", "force_type_")):
+                return await handler(event, data)
         elif isinstance(event, Message):
             user_id = event.from_user.id
+            # ادمین رو رد کن
+            if user_id in ADMIN_IDS:
+                return await handler(event, data)
         else:
             return await handler(event, data)
 
@@ -70,9 +75,4 @@ class ForceJoinMiddleware(BaseMiddleware):
                     await event.answer(text, reply_markup=kb)
                 elif isinstance(event, CallbackQuery):
                     await event.message.answer(text, reply_markup=kb)
-                    await event.answer()
-            except TelegramBadRequest:
-                pass
-            return
-
-        return await handler(event, data)
+                    
