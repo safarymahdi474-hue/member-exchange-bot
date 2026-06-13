@@ -3,7 +3,7 @@ from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKe
 from aiogram.exceptions import TelegramBadRequest
 import aiosqlite
 from config import DB_PATH, ADMIN_IDS
-from typing import Callable, Dict, Any, Awaitable
+from typing import Callable, Dict, Any
 
 
 async def get_unjoin_channel(bot, user_id: int):
@@ -42,6 +42,18 @@ def make_force_join_kb(channel):
     ])
 
 
+# callback هایی که باید بدون چک رد بشن
+ALLOWED_CALLBACKS = (
+    "recheck_force_join",
+    "force_type_count",
+    "force_type_time",
+    "add_force_channel",
+    "admin_force_join",
+    "remove_force_",
+    "back_admin",
+)
+
+
 class ForceJoinMiddleware(BaseMiddleware):
     async def __call__(
         self,
@@ -53,11 +65,13 @@ class ForceJoinMiddleware(BaseMiddleware):
 
         if isinstance(event, CallbackQuery):
             user_id = event.from_user.id
-            # ادمین و callback های مخصوص رو رد کن
+            # ادمین رو رد کن
             if user_id in ADMIN_IDS:
                 return await handler(event, data)
-            if event.data and event.data.startswith(("recheck_force_join", "force_type_")):
+            # callback های مجاز رو رد کن
+            if event.data and any(event.data.startswith(cb) for cb in ALLOWED_CALLBACKS):
                 return await handler(event, data)
+
         elif isinstance(event, Message):
             user_id = event.from_user.id
             # ادمین رو رد کن
@@ -75,4 +89,9 @@ class ForceJoinMiddleware(BaseMiddleware):
                     await event.answer(text, reply_markup=kb)
                 elif isinstance(event, CallbackQuery):
                     await event.message.answer(text, reply_markup=kb)
-                    
+                    await event.answer()
+            except TelegramBadRequest:
+                pass
+            return
+
+        return await handler(event, data)
