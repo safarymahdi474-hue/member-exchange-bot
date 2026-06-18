@@ -6,7 +6,7 @@ def main_menu_kb():
         keyboard=[
             [KeyboardButton(text="🎁 عضو شو و سکه بگیر")],
             [KeyboardButton(text="📦 سفارش ممبر"), KeyboardButton(text="💸 انتقال سکه")],
-            [KeyboardButton(text="👤 پروفایل")],
+            [KeyboardButton(text="👤 پروفایل"), KeyboardButton(text="🏆 لیدربورد")],
         ],
         resize_keyboard=True
     )
