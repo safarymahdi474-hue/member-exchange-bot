@@ -1,10 +1,13 @@
 from aiogram import Router, F, Bot
 from aiogram.types import CallbackQuery, Message
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from datetime import date, timedelta
 import aiosqlite
 from config import DB_PATH, ADMIN_IDS
+from database.db import get_setting, set_setting
 from utils.helpers import add_coins, get_all_user_ids
-from handlers.user.leaderboard import get_week_start, PRIZES, MEDALS, build_winners_text
+from handlers.user.leaderboard import get_week_start, MEDALS, build_winners_text, get_prizes
 
 router = Router()
 
@@ -13,28 +16,21 @@ def is_admin(user_id: int) -> bool:
     return user_id in ADMIN_IDS
 
 
-async def do_weekly_reset(bot: Bot, announce_to_all: bool = True, announce_to_channel: str = None):
-    """
-    ریست هفتگی:
-    1. برندگان هفته قبل رو پیدا می‌کنه
-    2. جایزه می‌ده
-    3. اعلام می‌کنه
-    4. جدول هفته جدید رو آماده می‌کنه
-    """
+# ── ریست هفتگی ────────────────────────────────────────────
+
+async def do_weekly_reset(bot: Bot, announce_to_all: bool = True):
     last_week_start = get_week_start() - timedelta(days=7)
+    prizes = await get_prizes()
 
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
 
-        # چک کن قبلاً ریست شده؟
         async with db.execute(
             "SELECT 1 FROM leaderboard_winners WHERE week_start = ? LIMIT 1",
             (last_week_start.isoformat(),)
         ) as c:
-            already_done = await c.fetchone()
-
-        if already_done:
-            return False, "این هفته قبلاً ریست شده."
+            if await c.fetchone():
+                return False, "این هفته قبلاً ریست شده."
 
         winners_data = {}
         for board_type in ("coins", "referrals"):
@@ -52,10 +48,9 @@ async def do_weekly_reset(bot: Bot, announce_to_all: bool = True, announce_to_ch
             ) as c:
                 winners_data[board_type] = await c.fetchall()
 
-        # ذخیره برندگان و پرداخت جایزه
         for board_type, winners in winners_data.items():
             for rank, winner in enumerate(winners, start=1):
-                prize = PRIZES[rank - 1]
+                prize = prizes[rank - 1]
                 await db.execute(
                     """
                     INSERT OR IGNORE INTO leaderboard_winners
@@ -66,12 +61,10 @@ async def do_weekly_reset(bot: Bot, announce_to_all: bool = True, announce_to_ch
                      winner["user_id"], winner["score"], prize)
                 )
                 await db.commit()
-                # پرداخت سکه
                 await add_coins(
                     winner["user_id"], prize, "leaderboard",
                     f"جایزه لیدربورد {board_type} — رتبه {rank}"
                 )
-                # اطلاع به برنده
                 try:
                     medal = MEDALS[rank - 1]
                     board_fa = "سکه" if board_type == "coins" else "رفرال"
@@ -85,46 +78,25 @@ async def do_weekly_reset(bot: Bot, announce_to_all: bool = True, announce_to_ch
                 except Exception:
                     pass
 
-    # متن اعلام نتایج
     winners_text = await build_winners_text(last_week_start)
     announcement = f"🏆 نتایج لیدربورد هفتگی اعلام شد!\n\n{winners_text}\n\n🔥 هفته جدید شروع شد. بزن بریم!"
 
-    # پیام همگانی به همه کاربران
     if announce_to_all:
-        user_ids = await get_all_user_ids()
-        sent = 0
-        for uid in user_ids:
+        for uid in await get_all_user_ids():
             try:
                 await bot.send_message(uid, announcement)
-                sent += 1
             except Exception:
                 pass
-
-    # ارسال به کانال ادمین
-    if announce_to_channel:
-        try:
-            await bot.send_message(announce_to_channel, announcement)
-        except Exception:
-            pass
 
     return True, announcement
 
 
-# ── هندلر دستی ادمین ──────────────────────────────────────
+# ── پنل مدیریت لیدربورد ───────────────────────────────────
 
-@router.callback_query(F.data == "admin_leaderboard")
-async def admin_leaderboard_panel(callback: CallbackQuery):
-    if not is_admin(callback.from_user.id):
-        return await callback.answer("❌ دسترسی ندارید.", show_alert=True)
-
+async def leaderboard_panel_text_kb():
     from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔄 ریست هفتگی + اعلام به همه", callback_data="lb_reset_all")],
-        [InlineKeyboardButton(text="📢 فقط اعلام (بدون ریست)", callback_data="lb_announce_only")],
-        [InlineKeyboardButton(text="🔙 بازگشت", callback_data="back_admin")],
-    ])
+    prizes = await get_prizes()
     week_start = get_week_start()
-    last_week = week_start - timedelta(days=7)
 
     async with aiosqlite.connect(DB_PATH) as db:
         async with db.execute(
@@ -133,13 +105,32 @@ async def admin_leaderboard_panel(callback: CallbackQuery):
         ) as c:
             active_users = (await c.fetchone())[0]
 
-    await callback.message.answer(
+    text = (
         f"🏆 مدیریت لیدربورد\n\n"
         f"📅 هفته جاری از: {week_start.strftime('%Y/%m/%d')}\n"
         f"👥 کاربران فعال این هفته: {active_users} نفر\n\n"
-        f"⚠️ ریست هفتگی باید هر شنبه انجام بشه.",
-        reply_markup=kb
+        f"🎁 جوایز فعلی:\n"
+        f"  🥇 رتبه اول: {prizes[0]} سکه\n"
+        f"  🥈 رتبه دوم: {prizes[1]} سکه\n"
+        f"  🥉 رتبه سوم: {prizes[2]} سکه"
     )
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔄 ریست هفتگی + اعلام به همه", callback_data="lb_reset_all")],
+        [InlineKeyboardButton(text="📢 پیش‌نمایش نتایج هفته قبل", callback_data="lb_announce_only")],
+        [InlineKeyboardButton(text="🥇 جایزه رتبه اول", callback_data="lb_set_prize_1")],
+        [InlineKeyboardButton(text="🥈 جایزه رتبه دوم", callback_data="lb_set_prize_2")],
+        [InlineKeyboardButton(text="🥉 جایزه رتبه سوم", callback_data="lb_set_prize_3")],
+        [InlineKeyboardButton(text="🔙 بازگشت", callback_data="back_admin")],
+    ])
+    return text, kb
+
+
+@router.callback_query(F.data == "admin_leaderboard")
+async def admin_leaderboard_panel(callback: CallbackQuery):
+    if not is_admin(callback.from_user.id):
+        return await callback.answer("❌ دسترسی ندارید.", show_alert=True)
+    text, kb = await leaderboard_panel_text_kb()
+    await callback.message.answer(text, reply_markup=kb)
     await callback.answer()
 
 
@@ -149,21 +140,67 @@ async def lb_reset_all(callback: CallbackQuery, bot: Bot):
         return
     await callback.message.answer("⏳ در حال پردازش...")
     success, msg = await do_weekly_reset(bot, announce_to_all=True)
-    if success:
-        await callback.message.answer("✅ ریست انجام شد و نتایج به همه اعلام شد.")
-    else:
-        await callback.message.answer(f"⚠️ {msg}")
+    await callback.message.answer("✅ ریست انجام شد و نتایج به همه اعلام شد." if success else f"⚠️ {msg}")
     await callback.answer()
 
 
 @router.callback_query(F.data == "lb_announce_only")
-async def lb_announce_only(callback: CallbackQuery, bot: Bot):
+async def lb_announce_only(callback: CallbackQuery):
     if not is_admin(callback.from_user.id):
         return
     last_week_start = get_week_start() - timedelta(days=7)
     text = await build_winners_text(last_week_start)
-    await callback.message.answer(f"📢 پیش‌نمایش اعلام:\n\n{text}")
+    await callback.message.answer(f"📢 پیش‌نمایش:\n\n{text}")
     await callback.answer()
+
+
+# ── ویرایش جوایز ──────────────────────────────────────────
+
+class PrizeStates(StatesGroup):
+    waiting_value = State()
+
+
+PRIZE_MAP = {
+    "lb_set_prize_1": ("lb_prize_1", "🥇 جایزه رتبه اول"),
+    "lb_set_prize_2": ("lb_prize_2", "🥈 جایزه رتبه دوم"),
+    "lb_set_prize_3": ("lb_prize_3", "🥉 جایزه رتبه سوم"),
+}
+
+
+@router.callback_query(F.data.in_(PRIZE_MAP.keys()))
+async def set_prize_start(callback: CallbackQuery, state: FSMContext):
+    if not is_admin(callback.from_user.id):
+        return
+    key, label = PRIZE_MAP[callback.data]
+    current = await get_setting(key) or {"lb_prize_1": 500, "lb_prize_2": 300, "lb_prize_3": 100}[key]
+    await state.update_data(prize_key=key, prize_label=label)
+    await callback.message.answer(
+        f"{label}\nمقدار فعلی: {current} سکه\n\nمقدار جدید را وارد کن:"
+    )
+    await state.set_state(PrizeStates.waiting_value)
+    await callback.answer()
+
+
+@router.message(PrizeStates.waiting_value)
+async def set_prize_confirm(message: Message, state: FSMContext):
+    if not is_admin(message.from_user.id):
+        return
+    try:
+        value = int(message.text.strip())
+        if value <= 0:
+            raise ValueError
+    except ValueError:
+        await message.answer("⚠️ عدد صحیح مثبت وارد کن.")
+        return
+
+    data = await state.get_data()
+    await set_setting(data["prize_key"], value)
+    await message.answer(f"✅ {data['prize_label']} به {value} سکه تغییر یافت.")
+    await state.clear()
+
+    # نمایش پنل آپدیت شده
+    text, kb = await leaderboard_panel_text_kb()
+    await message.answer(text, reply_markup=kb)
 
 
 # ── دستور مستقیم ──────────────────────────────────────────
@@ -174,7 +211,4 @@ async def weekly_reset_cmd(message: Message, bot: Bot):
         return
     await message.answer("⏳ در حال پردازش ریست هفتگی...")
     success, msg = await do_weekly_reset(bot, announce_to_all=True)
-    if success:
-        await message.answer("✅ ریست هفتگی با موفقیت انجام شد!")
-    else:
-        await message.answer(f"⚠️ {msg}")
+    await message.answer("✅ ریست هفتگی با موفقیت انجام شد!" if success else f"⚠️ {msg}")
