@@ -128,6 +128,9 @@ async def init_db():
             INSERT OR IGNORE INTO settings (key, value) VALUES ('coins_per_member', '2');
             INSERT OR IGNORE INTO settings (key, value) VALUES ('coins_per_referral', '25');
             INSERT OR IGNORE INTO settings (key, value) VALUES ('min_order', '1');
+            INSERT OR IGNORE INTO settings (key, value) VALUES ('lb_prize_1', '500');
+            INSERT OR IGNORE INTO settings (key, value) VALUES ('lb_prize_2', '300');
+            INSERT OR IGNORE INTO settings (key, value) VALUES ('lb_prize_3', '100');
         """)
         await db.commit()
 
@@ -181,6 +184,9 @@ async def migrate_db():
             );
 
             INSERT OR IGNORE INTO settings (key, value) VALUES ('min_order', '1');
+            INSERT OR IGNORE INTO settings (key, value) VALUES ('lb_prize_1', '500');
+            INSERT OR IGNORE INTO settings (key, value) VALUES ('lb_prize_2', '300');
+            INSERT OR IGNORE INTO settings (key, value) VALUES ('lb_prize_3', '100');
         """)
         await db.commit()
 
