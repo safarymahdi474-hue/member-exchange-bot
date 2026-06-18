@@ -101,25 +101,26 @@ async def init_db():
                 channel_id TEXT,
                 skipped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (user_id, channel_id)
-                CREATE TABLE IF NOT EXISTS weekly_leaderboard (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    week_start DATE NOT NULL,
-    user_id INTEGER NOT NULL,
-    coins_earned INTEGER DEFAULT 0,
-    referrals INTEGER DEFAULT 0,
-    UNIQUE(week_start, user_id)
-);
+            );
 
-CREATE TABLE IF NOT EXISTS leaderboard_winners (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    week_start DATE NOT NULL,
-    board_type TEXT NOT NULL,
-    rank INTEGER NOT NULL,
-    user_id INTEGER NOT NULL,
-    score INTEGER NOT NULL,
-    prize_coins INTEGER NOT NULL,
-    announced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+            CREATE TABLE IF NOT EXISTS weekly_leaderboard (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                week_start DATE NOT NULL,
+                user_id INTEGER NOT NULL,
+                coins_earned INTEGER DEFAULT 0,
+                referrals INTEGER DEFAULT 0,
+                UNIQUE(week_start, user_id)
+            );
+
+            CREATE TABLE IF NOT EXISTS leaderboard_winners (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                week_start DATE NOT NULL,
+                board_type TEXT NOT NULL,
+                rank INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                score INTEGER NOT NULL,
+                prize_coins INTEGER NOT NULL,
+                announced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
             INSERT OR IGNORE INTO settings (key, value) VALUES ('coins_start', '50');
@@ -129,6 +130,7 @@ CREATE TABLE IF NOT EXISTS leaderboard_winners (
             INSERT OR IGNORE INTO settings (key, value) VALUES ('min_order', '1');
         """)
         await db.commit()
+
 
 async def migrate_db():
     async with aiosqlite.connect(DB_PATH) as db:
@@ -156,6 +158,26 @@ async def migrate_db():
                 user_id INTEGER PRIMARY KEY,
                 full_name TEXT,
                 permissions TEXT DEFAULT 'full'
+            );
+
+            CREATE TABLE IF NOT EXISTS weekly_leaderboard (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                week_start DATE NOT NULL,
+                user_id INTEGER NOT NULL,
+                coins_earned INTEGER DEFAULT 0,
+                referrals INTEGER DEFAULT 0,
+                UNIQUE(week_start, user_id)
+            );
+
+            CREATE TABLE IF NOT EXISTS leaderboard_winners (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                week_start DATE NOT NULL,
+                board_type TEXT NOT NULL,
+                rank INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                score INTEGER NOT NULL,
+                prize_coins INTEGER NOT NULL,
+                announced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
             INSERT OR IGNORE INTO settings (key, value) VALUES ('min_order', '1');
