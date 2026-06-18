@@ -6,6 +6,8 @@ from config import BOT_TOKEN
 from database.db import init_db, migrate_db
 from handlers.user import start, profile, tasks, orders, transfer, gift_code, donate, advertise, recheck
 from handlers.admin import panel, gift_codes, broadcast, admins, force_join
+from handlers.user import leaderboard as user_leaderboard
+from handlers.admin import leaderboard as admin_leaderboard
 from middlewares.force_join import ForceJoinMiddleware
 
 logging.basicConfig(level=logging.INFO)
