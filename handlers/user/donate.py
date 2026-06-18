@@ -24,7 +24,7 @@ async def buy_coins_start(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(
         "💰 خرید سکه\n\n"
         "📌 نرخ تبدیل:\n"
-        "🪙 هر ۱۰۰ سکه = ۴۰,۰۰۰ تومان\n\n"
+        "🪙 هر 200 سکه = ۴۰,۰۰۰ تومان\n\n"
         "⚠️ توجه مهم:\n"
         "━━━━━━━━━━━━━━━━━━\n"
         "❗ وجه پرداخت‌شده تحت هیچ شرایطی\n"
@@ -46,7 +46,7 @@ async def buy_coins_confirmed(callback: CallbackQuery, state: FSMContext):
         f"۱. روی لینک بالا برو و مبلغ دلخواه رو پرداخت کن\n"
         f"۲. بعد از پرداخت، عکس فیش رو اینجا بفرست\n"
         f"۳. بعد از تأیید ادمین، سکه به حسابت اضافه میشه\n\n"
-        f"🪙 نرخ تبدیل: هر ۴۰,۰۰۰ تومان = ۱۰۰ سکه\n\n"
+        f"🪙 نرخ تبدیل: هر ۴۰,۰۰۰ تومان = 200 سکه\n\n"
         f"📸 عکس فیش رو ارسال کن:",
         reply_markup=back_kb()
     )
@@ -70,7 +70,7 @@ async def receive_receipt(message: Message, state: FSMContext, bot: Bot):
                     f"👤 نام: {full_name}\n"
                     f"🆔 آیدی: {user_id}\n"
                     f"👤 یوزرنیم: @{username}\n\n"
-                    f"📌 نرخ: هر ۴۰,۰۰۰ تومان = ۱۰۰ سکه\n\n"
+                    f"📌 نرخ: هر ۴۰,۰۰۰ تومان = 200 سکه\n\n"
                     f"برای دادن سکه از دستور زیر استفاده کن:\n"
                     f"/addscore {user_id} [تعداد سکه]"
                 )
