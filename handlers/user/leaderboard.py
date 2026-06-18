@@ -4,19 +4,26 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import aiosqlite
 from datetime import date, timedelta
 from config import DB_PATH
+from database.db import get_setting
 
 router = Router()
 
 MEDALS = ["🥇", "🥈", "🥉"]
-PRIZES = [500, 300, 100]
 
 
 def get_week_start() -> date:
     """شنبه این هفته"""
     today = date.today()
-    # weekday(): Mon=0 ... Sat=5, Sun=6  →  شنبه = Sat = 5
     days_since_saturday = (today.weekday() - 5) % 7
     return today - timedelta(days=days_since_saturday)
+
+
+async def get_prizes() -> list:
+    """جوایز رو از دیتابیس بخون"""
+    p1 = await get_setting("lb_prize_1") or 500
+    p2 = await get_setting("lb_prize_2") or 300
+    p3 = await get_setting("lb_prize_3") or 100
+    return [p1, p2, p3]
 
 
 def leaderboard_kb():
@@ -30,6 +37,7 @@ def leaderboard_kb():
 
 
 async def build_board_text(board_type: str, week_start: date, title: str) -> str:
+    prizes = await get_prizes()
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
         col = "coins_earned" if board_type == "coins" else "referrals"
@@ -50,7 +58,7 @@ async def build_board_text(board_type: str, week_start: date, title: str) -> str
     lines = [
         f"🏆 {title}",
         f"📅 هفته {week_start.strftime('%m/%d')} تا {week_end.strftime('%m/%d')}\n",
-        f"🎁 جوایز: {PRIZES[0]}🥇 | {PRIZES[1]}🥈 | {PRIZES[2]}🥉 سکه\n",
+        f"🎁 جوایز: {prizes[0]}🥇 | {prizes[1]}🥈 | {prizes[2]}🥉 سکه\n",
     ]
 
     if not rows:
