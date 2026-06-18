@@ -38,7 +38,7 @@ async def main():
     dp.include_router(admins.router)
     dp.include_router(force_join.router)
     dp.include_router(user_leaderboard.router)
-dp.include_router(admin_leaderboard.router)
+    dp.include_router(admin_leaderboard.router)
 
     print("✅ ربات استارت شد!")
     await dp.start_polling(bot)
