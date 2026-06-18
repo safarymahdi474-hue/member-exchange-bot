@@ -101,6 +101,25 @@ async def init_db():
                 channel_id TEXT,
                 skipped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (user_id, channel_id)
+                CREATE TABLE IF NOT EXISTS weekly_leaderboard (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    week_start DATE NOT NULL,
+    user_id INTEGER NOT NULL,
+    coins_earned INTEGER DEFAULT 0,
+    referrals INTEGER DEFAULT 0,
+    UNIQUE(week_start, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS leaderboard_winners (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    week_start DATE NOT NULL,
+    board_type TEXT NOT NULL,
+    rank INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    score INTEGER NOT NULL,
+    prize_coins INTEGER NOT NULL,
+    announced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
             );
 
             INSERT OR IGNORE INTO settings (key, value) VALUES ('coins_start', '50');
